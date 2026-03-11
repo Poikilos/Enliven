@@ -184,7 +184,10 @@ gamespec['add_mods']: List[Dict[str, any]] = [
     {'name': "builtin_item", 'repo': "https://codeberg.org/tenplus1/builtin_item.git",
      'description': "Dropped items can now be pushed by water, burn quickly in lava and have their own custom functions.",
      'why': "Each craftitem has more physics, and if stuck inside a block will free itself."},
-    {'name': "compassgps",     'repo': "https://github.com/Poikilos/compassgps.git"},
+    {'name': "compassgps",     #'repo': "https://github.com/Poikilos/compassgps.git"},
+     'repo': "https://github.com/Kilarin/compassgps"},
+    # TODO: ^ Deprecate my fork?
+    {'name': "connected_chests", 'repo': "https://github.com/HybridDog/connected_chests.git"},
     {'name': "controls", 'repo': "https://github.com/mt-mods/controls.git",
      'why': "Required by visible_sneak"},
     # {'name': "digilines",      'repo': "https://github.com/minetest-mods/digilines.git"},
@@ -199,6 +202,10 @@ gamespec['add_mods']: List[Dict[str, any]] = [
     {'name': "frame", 'repo': "https://github.com/minetest-mods/frame.git"},
     # {'name': "homedecor_modpack", 'repo': "https://github.com/mt-mods/homedecor_modpack.git"},
     # {'name': "homedecor_ua",   'repo': "https://github.com/Poikilos/homedecor_ua.git"},
+    {'name': "hopper", 'repo': "https://github.com/minetest-mods/hopper.git"},
+    # {'repo': "https://codeberg.org/tenplus1/hopper", 'why-not': "fewer releases and contributors than Facedeer's"},
+    {'name': "hopper_compat", 'repo': "https://github.com/DustyBagel/hopper_compat.git",
+     'what': "Hopper compatibility for various chests including those in the connected chests mod"},
     {'name': "item_drop",      'repo': "https://github.com/minetest-mods/item_drop.git",
      'settings': {'item_drop.pickup_radius': "1.425"}},
     {'name': "mesecons_carts", 'repo': "https://cheapiesystems.com/git/mesecons_carts.git"},
@@ -206,6 +213,9 @@ gamespec['add_mods']: List[Dict[str, any]] = [
     #  'what': "A hammer that cuts stairs and ladders in blocks"},
     {'name': "mywalls",        'repo': "https://github.com/minetest-mods/mywalls.git",
      'what': "Adds more wall types for walls mod from minetest_game."},
+    # {'name': 'orichalcum', 'repo': "https://github.com/EnlivenLuanti/orichalcum.git",
+    #  'settings': OrderedDict(generate_ore=False)},
+    # TODO: ^ Change it from an ore to an alloy and/or treasure. Create generate_ore setting
     # {'name': "painting", 'repo': "https://github.com/evrooije/painting.git",
     #  'why': "Required by Painted 3D Armor"},
     # TODO: ^ Simplify Painted 3D Armor and just make banners combine with shields
@@ -267,6 +277,7 @@ gamespec['add_mods']: List[Dict[str, any]] = [
     {'name': "environment_music", 'repo': "https://github.com/Poikilos/environment_music.git"},
     {'name': "fire_plus", 'repo': "https://github.com/Dumpster-Studios/fire_plus.git"},
     {'name': "hbsprint", 'repo': "https://github.com/minetest-mods/hbsprint.git"},
+    # TODO: ^ Deprecate my fork? https://github.com/Poikilos/hbsprint (merge conflicts)
     # {'name': "sprint_lite", 'repo': "https://github.com/mt-historical/sprint_lite.git",
     #  'why-not': "Can't use hunger_ng, hbsprint now can. Mini API not necessary (?) since hbsprint works with unified_stamina"},
     # TODO: Port mini-api from sprint_lite to hbsprint if other mods can't check/affect stamina (Try via unified_stamina)
@@ -296,6 +307,8 @@ gamespec['add_mods']: List[Dict[str, any]] = [
      'what': "Show player list on sneak. Has color API and ping.",
      'content_url': "https://content.luanti.org/packages/AiTechEye/invisible/"},
     # {'name': "skinsdb",        'repo': "https://github.com/minetest-mods/skinsdb.git"},
+    {'name': "sounds_redone", 'repo': "https://github.com/starninjas/sounds_redone.git",
+     'what': "Better and block-specific breaking and walking sounds"},
     # {'name': "sprint",         'repo': "https://github.com/GunshipPenguin/sprint.git"},
     # {'name': "unified_inventory",'repo': [
     #     "https://github.com/minetest-mods/unified_inventory.git",

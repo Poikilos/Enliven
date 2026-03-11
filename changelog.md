@@ -5,6 +5,15 @@ The format is based on [Keep a
 Changelog](https://keepachangelog.com/en/1.0.0/).
 
 
+## 2026-03-11
+### Added
+- sounds_redone, connected_chests, hopper, and hopper_compat.
+- orichalcum (commented for now)
+
+### Changed
+- Switch to upstream compassgps.
+
+
 ## [git] - 2026-03-07
 ### Added
 - bedrock2, fire_plus, frame, playerlist
