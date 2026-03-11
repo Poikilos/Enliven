@@ -8,6 +8,7 @@
 		"cSpell.words": [
 			"AppDatas",
 			"cmts",
+			"compassgps",
 			"dbusername",
 			"enissue",
 			"enlynx",
@@ -17,25 +18,33 @@
 			"forwardfilesync",
 			"Gitea",
 			"Gustafson",
+			"homedecor",
+			"hudbars",
 			"instaweb",
+			"kaeza",
 			"Luanti",
 			"metas",
 			"minetest",
 			"minigamer",
+			"modpack",
 			"mtanalyze",
 			"Poikilos",
 			"pycodetool",
 			"pyenliven",
 			"pyissuesyncd",
+			"railcorridors",
 			"reac",
 			"SIGSEGV",
+			"statbar",
 			"subgametest",
 			"surfraw",
 			"Syuu",
+			"TenPlus1",
 			"tmln",
 			"Unported",
 			"webrick",
-			"Wuzzy"
+			"Wuzzy",
+			"xban"
 		]
 	}
 }
