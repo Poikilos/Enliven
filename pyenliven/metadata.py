@@ -74,6 +74,7 @@ gamespec['add_mods']: List[Dict[str, any]] = [
     {'name': "mobs_water", 'repo': "https://github.com/blert2112/mobs_water.git"},
     #{'name': "dmobs", 'repo': ["https://github.com/minetest-mobs-mods/dmobs.git",
     #                           "https://codeberg.org/tenplus1/dmobs"]},
+    # TODO: ^ Compare the new skeleton texture to mine
     # TODO: ^ Make open_ai mobs api bridge for these?
     # {'name': "open_ai", 'repo': "https://github.com/Poikilos/open_ai.git",
     #  'why': "creatura is light on features; no projectiles etc. Mobs Redo AI is low-functioning."},
