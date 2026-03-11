@@ -65,7 +65,7 @@ class GameBuilder:
         echo0("Copying minetest_game → ENLIVEN ...")
         shutil.copytree(self.source_game, self.target_game)
 
-    def install_mod(self, entry: Dict[str, any]):
+    def install_mod(self, entry: Dict[str, any], remove_git=True):
         name = entry.get('name')
         repo = entry.get('repo')
         branch = entry.get('branch')
@@ -160,6 +160,11 @@ class GameBuilder:
         # if os.path.isdir(dest_git):
         #     shutil.rmtree(dest_git)
         self.meta['mods'][name] = entry
+        if remove_git:
+            destGit = os.path.join(dest, ".git")
+            if os.path.isdir(destGit):
+                print(f"rm -rf {repr(destGit)}")
+                shutil.rmtree(destGit)
 
     def remove_mod(self, name: str):
         path = os.path.join(self.mods_target, name)
