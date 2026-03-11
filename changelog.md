@@ -7,6 +7,14 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## 2026-03-11
 ### Added
+- Add badlands, goblins, dungeon_flora, nextgen_fungi, cactus_damage, tnt_extras.
+
+### Changed
+- Switch to caverealms lite.
+
+
+## 2026-03-11
+### Added
 - sounds_redone, connected_chests, hopper, and hopper_compat.
 - orichalcum (commented for now)
 

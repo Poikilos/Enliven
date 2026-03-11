@@ -80,6 +80,8 @@ gamespec['add_mods']: List[Dict[str, any]] = [
     # {'name': "spawners",       'repo': "https://bitbucket.org/minetest_gamers/spawners.git"},
 
     # Worldgen
+    {'name': "badlands", 'repo': "https://github.com/EnlivenLuanti/badlands.git",
+     'what': "Baked clay biome, with higher gold spawn rate."},
     {'name': "bakedclay",      'repo': ["https://notabug.org/tenplus1/bakedclay.git",
                                         "https://codeberg.org/tenplus1/bakedclay.git"]},
     {'name': "bedrock2", 'repo': "https://codeberg.org/Wuzzy/minetest_bedrock2.git",
@@ -89,7 +91,11 @@ gamespec['add_mods']: List[Dict[str, any]] = [
     {'name': "biome_lib",      'repo': "https://github.com/mt-mods/biome_lib.git"},
     # {'name': "birthstones",    'repo': "https://github.com/Poikilos/birthstones.git"},  # commented to reduce inventory overload
     {'name': "bushes_soil",    'repo': "https://github.com/Poikilos/bushes_soil.git"},
-    {'name': "caverealms",     'repo': "https://github.com/FaceDeer/minetest-caverealms.git"},
+    # {'name': "caverealms",     'repo': "https://github.com/FaceDeer/minetest-caverealms.git",
+    #  'why-not': "not maintained--see Caverealms Lite, which looks better now."},
+    {'name': "caverealms", 'repo': "https://github.com/Ezhh/caverealms_lite.git", 'content_url': "https://content.luanti.org/packages/Shara/caverealms/"},
+    {'name': "goblins", 'repo': "https://gitlab.com/freelikegnu/goblins.git",
+     'content_url': "https://content.luanti.org/packages/FreeLikeGNU/goblins/"},
     {'name': "lapis",          'repo': "https://github.com/Napiophelios/LapisLazuli.git",
      'settings': OrderedDict(enable_lapis_mod_columns=True),
      'why': "Unlike, minetest-mods/lapis, LapisLazuli has more things you can make."},
@@ -100,6 +106,8 @@ gamespec['add_mods']: List[Dict[str, any]] = [
     {'name': "mapgen_helper",  'repo': "https://github.com/minetest-mods/mapgen_helper.git"},
     {'name': "mesecons",       'repo': "https://github.com/minetest-mods/mesecons"},
     # TODO: ^ trim down mesecons or make registered nodes configurable
+    {'name': "dungeon_flora", 'repo': "https://github.com/RNU4/mintest-dungeon-flora.git",
+     'content_url': "https://content.luanti.org/packages/malt2592/dungeon_flora/"},
     # {'name': "moreblocks",     'repo': "https://github.com/minetest-mods/moreblocks.git",
     #  'why-not': "permanently changes default stairs. Has many registrations. Has its own ropes (vine-like ones).",
     #  'why': "Can use place_rotated. Has stairsplus."},
@@ -118,6 +126,8 @@ gamespec['add_mods']: List[Dict[str, any]] = [
     {'name': "moretrees",      'repo': "https://github.com/mt-mods/moretrees.git"},
     {'name': "naturalbiomes", 'repo': "https://github.com/Skandarella/naturalbiomes.git",
      'recommends': ["winuserleafdecay"]},
+    {'name': "nextgen_fungi", 'repo': "https://github.com/starninjas/nextgen_fungi.git",
+     'content_url': "https://content.luanti.org/packages/StarNinjas/nextgen_fungi/"},
     {'name': "plantlife_modpack", 'repo': "https://github.com/mt-mods/plantlife_modpack.git"},
     # TODO: ^ Remove any mods that overlap naturalbiomes
     {'name': "subterrane",     'repo': "https://github.com/minetest-mods/subterrane.git"},
@@ -184,6 +194,7 @@ gamespec['add_mods']: List[Dict[str, any]] = [
     {'name': "builtin_item", 'repo': "https://codeberg.org/tenplus1/builtin_item.git",
      'description': "Dropped items can now be pushed by water, burn quickly in lava and have their own custom functions.",
      'why': "Each craftitem has more physics, and if stuck inside a block will free itself."},
+    {'name': "cactus_damage", 'repo': "https://gitlab.com/validandloved/cactus_damage.git", 'content_url': "https://content.luanti.org/packages/VMan_2002/cactus_damage/"},
     {'name': "compassgps",     #'repo': "https://github.com/Poikilos/compassgps.git"},
      'repo': "https://github.com/Kilarin/compassgps"},
     # TODO: ^ Deprecate my fork?
@@ -329,6 +340,8 @@ gamespec['add_mods']: List[Dict[str, any]] = [
     {'name': "invisible", 'repo': "https://github.com/AiTechEye/invisible.git",
      'items': {'moderator': ['invisible:tool']},  # i is alias for invisible:tool
      'privs': {'moderator': ['invisible']}},
+    {'name': "tnt_extras", 'repo': "https://github.com/minetest-mods/tnt_extras.git",
+     'what': "Obsidian blocks TNT. TNT degrades some materials to another material."},
     {'name': "tnt_revamped", 'repo': "https://gitlab.com/Coder12a/tnt_revamped.git"},
     # NOTE: ^ See also visible_sneak
     {'name': "unified_stamina", 'repo': "https://github.com/t-affeldt/unified_stamina.git",
