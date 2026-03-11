@@ -1,0 +1,3 @@
+* detected "/home/owner/Nextcloud"
+* APPDATA="/home/owner/.config"
+* localUniqueDir="/home/owner/.config/mtanalyze"

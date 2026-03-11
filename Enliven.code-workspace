@@ -1,0 +1,41 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"cSpell.words": [
+			"AppDatas",
+			"cmts",
+			"dbusername",
+			"enissue",
+			"enlynx",
+			"erle",
+			"evts",
+			"falses",
+			"forwardfilesync",
+			"Gitea",
+			"Gustafson",
+			"instaweb",
+			"Luanti",
+			"metas",
+			"minetest",
+			"minigamer",
+			"mtanalyze",
+			"Poikilos",
+			"pycodetool",
+			"pyenliven",
+			"pyissuesyncd",
+			"reac",
+			"SIGSEGV",
+			"subgametest",
+			"surfraw",
+			"Syuu",
+			"tmln",
+			"Unported",
+			"webrick",
+			"Wuzzy"
+		]
+	}
+}

@@ -1,0 +1,260 @@
+import platform
+import shutil
+import os
+
+from collections import OrderedDict
+from logging import getLogger
+from typing import Dict
+
+from git import Repo
+
+from pyenliven import MODS_STOPGAP_DIR, PATCHES_SUBGAME_DIR, echo0
+from pyenliven.metadata import (
+    BASE_ENLIVEN_CONF_SETTINGS,
+    gamespec,
+    update_conf,
+)
+
+
+logger = getLogger(__name__)
+
+
+class GameBuilder:
+    """Manage creation of a game from scratch.
+
+    Attributes:
+        more_conf (OrderedDict): minetest.conf settings collected from
+            entry(ies) such as from install_mod calls.
+    """
+    def __init__(self, minetest_game_path: str, minetest_version: str = "5",
+                 offline: bool = False, delete: bool = False,
+                 pull: bool = True):
+        self.source_game = os.path.realpath(minetest_game_path)
+        self.target_parent = os.path.dirname(self.source_game)
+        self.target_game = os.path.join(self.target_parent, "ENLIVEN")
+        self.pull = pull
+        if os.path.exists(self.target_game):
+            if delete:
+                print(f"rm -rf {repr(self.target_game)}")
+                shutil.rmtree(self.target_game)
+        self.mods_target = os.path.join(self.target_game, "mods")
+        self.minetest_version = minetest_version  # "5" or "0.4"
+        self.offline = offline
+        self.more_conf = OrderedDict()
+        self.meta = OrderedDict()
+        self.meta['mods'] = OrderedDict()
+
+        if minetest_version not in ("5", "0.4"):
+            raise ValueError("minetest_version must be '5' or '0.4'")
+
+        if not os.path.isdir(self.source_game):
+            raise FileNotFoundError(f"minetest_game not found: {self.source_game}")
+        if os.path.realpath(self.source_game) == os.path.realpath(self.target_game):
+            raise ValueError("source game and target game are both"
+                             f" {repr(os.path.realpath(self.source_game))}")
+        echo0(f"Building ENLIVEN → {self.target_game}")
+        echo0(f"  from base: {self.source_game}")
+        echo0(f"  target Minetest compatibility: {self.minetest_version}")
+        echo0(f"  offline mode: {self.offline}")
+
+    def prepare_target(self):
+        """Copy minetest_game → ENLIVEN if needed"""
+        if os.path.exists(self.target_game):
+            raise FileExistsError(f"Target already exists: {self.target_game}")
+            # return
+        echo0("Copying minetest_game → ENLIVEN ...")
+        shutil.copytree(self.source_game, self.target_game)
+
+    def install_mod(self, entry: Dict[str, any]):
+        name = entry.get('name')
+        repo = entry.get('repo')
+        branch = entry.get('branch')
+        stopgap_only = entry.get('stopgap_only', False)
+        settings = entry.get('settings')
+        if settings:
+            for k, v in settings.items():
+                self.more_conf[k] = v
+
+        if not name:
+            raise ValueError(f"Missing 'name' in {entry}")
+        if name in self.meta['mods']:
+            raise KeyError(f"Already installed a mod named {name}")
+        dest = os.path.join(self.mods_target, name)
+
+        # 1. Prefer stopgap if exists
+        stopgap_src = os.path.join(MODS_STOPGAP_DIR, name)
+
+        if os.path.isdir(stopgap_src):
+            echo0(f"  [stopgap] {name}")
+            if os.path.exists(dest):
+                if os.path.islink(dest):
+                    os.remove(dest)
+                else:
+                    shutil.rmtree(dest)
+            shutil.copytree(stopgap_src, dest)
+            self.meta['mods'][name] = entry
+            return
+
+        # 2. Git clone if we have repo URL(s)
+        if not repo:
+            raise ValueError(f"Missing 'repo' for {entry}")
+        urls = [repo] if isinstance(repo, str) else repo
+        url = urls[-1]  # prefer last one
+        del urls
+        distributor = entry.get('distributor')
+        if not distributor:
+            distributor = url.split("/")[-2]
+        repo_name = url.split("/")[-1].replace(".git", "")
+
+        source_path = os.path.expanduser(f"~/{repo_name}")
+        symlink = False
+        if os.path.isdir(source_path):
+            # Use the development copy on the computer
+            logger.warning(
+                f"Using local git repo without update: {source_path}")
+            symlink = True
+        else:
+            source_path = os.path.expanduser(
+                f"~/Downloads/git/{distributor}/{repo_name}")
+            if os.path.isdir(source_path):
+                if not self.offline:
+                    if self.pull:
+                        echo0(f"  pulling {source_path}")
+                        git_repo = Repo(source_path)
+                        git_repo.remotes.origin.pull()
+                    else:
+                        echo0(f"  using existing {source_path}")
+            else:
+                if self.offline:
+                    raise FileNotFoundError(
+                        f"Mod {name} not found in offline mode:"
+                        f" {source_path}")
+                else:
+                    echo0(f"  cloning {url} → {source_path}")
+                    Repo.clone_from(url, source_path)
+        if os.path.exists(dest):
+            raise FileExistsError(f"Remove {dest} first.")
+            # shutil.rmtree(dest)
+        if symlink:
+            if platform.system() == "Windows":
+                symlink = False  # since making symlink requires elevation
+        if symlink:
+            os.symlink(source_path, dest, target_is_directory=True)
+        else:
+            shutil.copytree(source_path, dest)
+        exclude = entry.get('exclude')
+        if exclude:
+            for sub in exclude:
+                subPath = os.path.join(dest, sub)
+                if os.path.isfile(subPath):
+                    print(f"rm {repr(subPath)}")
+                    os.remove(subPath)
+                elif os.path.isdir(subPath):
+                    print(f"rm -r {repr(subPath)}")
+                    shutil.rmtree(subPath)
+                else:
+                    logger.warning(
+                        f"There is no {subPath} though it"
+                        f" was specified in 'exclude' in {entry}")
+        # dest_git = os.path.join(dest, ".git")
+        # if os.path.isdir(dest_git):
+        #     shutil.rmtree(dest_git)
+        self.meta['mods'][name] = entry
+
+    def remove_mod(self, name: str):
+        path = os.path.join(self.mods_target, name)
+        if os.path.isdir(path):
+            echo0(f"  removing {name}")
+            shutil.rmtree(path)
+
+    def apply_remove_list(self):
+        for m in gamespec.get('remove_mods', []):
+            self.remove_mod(m)
+
+    def install_all_mods(self):
+        for entry in gamespec.get('add_mods', []):
+            self.install_mod(entry)
+
+    def write_game_conf(self):
+        path = os.path.join(self.target_game, "game.conf")
+        with open(path, "w", encoding="utf-8") as f:
+            f.write("name = ENLIVEN\n")
+            f.write("description = For building immersive worlds using ramping, consistent style, and emphasizing world interaction over menus\n")
+
+    def update_conf(self, path: str):
+        """Append settings only if not already present (line-based, stripped comparison)"""
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+
+        # Collect base settings
+        new_settings = BASE_ENLIVEN_CONF_SETTINGS.copy()
+        new_settings.update(self.more_conf)
+
+        # Add version-specific player animation setting
+        if 'playeranim' in self.meta['mods']:
+            # TODO: Make version keys and values in gamespec
+            if self.minetest_version == "5":
+                new_settings['playeranim.model_version'] = "MTG_4_Nov_2017"
+            else:  # "0.4"
+                new_settings['playeranim.model_version'] = "MTG_4_Jun_2017"
+
+        if not new_settings:
+            return
+        update_conf(path, new_settings)
+        # desired_set = {line.strip() for line in desired_lines if line.strip()}
+
+    def apply_subgame_patch(self, name, src_parent=None, level=0):
+        if src_parent is None:
+            src_parent = os.path.join(PATCHES_SUBGAME_DIR, name)
+        dst_parent = os.path.join(self.target_game, name)
+        if os.path.isdir(src_parent):
+            for sub in os.listdir(src_parent):
+                src = os.path.join(src_parent, sub)
+                dst = os.path.join(dst_parent, sub)
+                if os.path.isdir(src):
+                    if not os.path.isdir(dst):
+                        os.makedirs(dst)
+                    self.apply_subgame_patch(
+                        os.path.join(name, sub),
+                        src_parent=src,
+                        level=level+1)
+                    continue
+                if os.path.isfile(dst):
+                    os.remove(dst)
+                shutil.copy(src, dst)
+        else:
+            logger.warning(f"There is no {src_parent},"
+                           " so the icon and header will not be patched.")
+        # if level == 0:
+        echo0(f"Applied overwrite-based patch:\n-{dst_parent}\n+{src_parent}")
+
+    def build(self, conf_path: str = None):
+        self.prepare_target()
+        self.apply_remove_list()
+        self.install_all_mods()
+        self.write_game_conf()
+
+        # Default conf path if not provided
+        if not conf_path:
+            games_path = os.path.dirname(self.target_game)
+            engine_path = os.path.dirname(games_path)
+            try_conf_path = os.path.join(engine_path, "minetest.conf")
+            if os.path.isfile(try_conf_path):
+                conf_path = try_conf_path
+                print(f"[build] Detected {repr(try_conf_path)}")
+            else:
+                print(f"[build] There is no {repr(try_conf_path)}")
+            if not conf_path:
+                print(f"[build] Creating example {repr(try_conf_path)}")
+                conf_path = os.path.join(self.target_game, "minetest.conf.enliven")
+        else:
+            print(f"[build] Using specified {repr(try_conf_path)}")
+
+        self.update_conf(conf_path)
+        self.apply_subgame_patch("menu")
+
+        echo0("\nBuild finished.")
+        echo0(f"Game location: {self.target_game}")
+        echo0(f"       Config: {conf_path}")
+        echo0("Next steps:")
+        echo0("  • review & edit the minetest.conf file")
+        echo0("  • test in Minetest")

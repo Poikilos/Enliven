@@ -1,0 +1,524 @@
+#!/usr/bin/env python3
+'''
+Title: pyissuesyncd
+(c) 2021 Jake "Poikilos" Gustafson
+
+
+Purpose:
+This python-based daemon synchronizes issues (one-way) from one
+repository to another.
+
+
+License:
+See the license file in the included Enliven directory or at
+[Enliven](https://github.com/Poikilos/Enliven)
+
+
+Definitions:
+- data_directory: The data directory for this service daemon is
+  os.path.join(profile, ".cache", "pyissuesyncd").
+- repo: In this context, repo refers to a project management system with
+  a web API.
+
+
+Examples:
+DST_REPO=https://example.com/git/repo pyissuesyncd
+pyissuesyncd --dst-repo https://example.com/git/repo
+
+The two _CACHE directories below are used as the single_cache option
+for the Repo (see enissue.py's Repo class for documentation).
+
+'''
+
+__old_doc__ = '''
+required arguments:
+--dst-repo (or set the DST_REPO environment variable)
+    Issues and dependent data will be overwritten at this API URL.
+
+optional arguments:
+Environment variables get be set, but a CLI argument will override the
+corresponding variable noted below in all caps.
+
+--src-cache: Set the directory to store a cached version of the source repo's data.
+* defaults to SRC_CACHE or os.path.join(data_directory, "source")
+
+--dst-cache: Set the directory to store a cached version of the destination repo's data.
+* defaults to DST_CACHE or os.path.join(data_directory, "destination")
+
+--src-repo-token: Set the token you generated using the repo's web interface.
+* defaults to SRC_REPO_TOKEN or None
+
+--src-min-issue: Set what issue number to check first.
+* defaults to SRC_MIN_ISSUE or None
+
+--src-max-issue: Set what issue number to check last.
+* defaults to SRC_MAX_ISSUE or None
+'''
+import os
+import sys
+import json
+from datetime import datetime  #, timedelta
+# see <https://stackoverflow.com/questions/5574702/how-to-print-to-stderr-in-python>
+def error(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+
+
+myFilePath = os.path.realpath(__file__)
+me = os.path.basename(__file__)
+myDir = os.path.dirname(myFilePath)
+
+try:
+    import enissue
+except ModuleNotFoundError as ex:
+    PATH = os.environ.get("PATH")
+    found_d = None
+    if PATH is not None:
+        more_paths = PATH.split(os.pathsep)
+        # ^ pathsep such as ':' (NOT dirsep such as '/'!)
+        more_paths
+        for this_d in more_paths:
+            tryF = os.path.join(this_d, "enissue.py")
+            if os.path.isfile(tryF):
+                found_d = this_d
+                break
+    if found_d is not None:
+        sys.path.append(found_d)
+        print("* detected enissue.py in {}".format(found_d))
+        # print("path: {}".format(sys.path))
+
+        try:
+            import eni
+        except ModuleNotFoundError as ex2:
+            error(ex2)
+            print("{} must be in the same directory as enissue.py or in"
+                  " PATH".format(me))
+            sys.exit(1)
+    else:
+        print("{} must be in the same directory as enissue.py or in"
+              " PATH".format(me))
+        raise ex
+
+from enissue import (
+    Repo,
+    modify_dict_by_conf,
+    # str_to_value,
+)
+
+
+data_directory = os.path.join(Repo.profile, ".cache", "pyissuesyncd")
+confs_directory = os.path.join(Repo.profile, ".config", "pyissuesyncd")
+src_conf_path = os.path.join(confs_directory, "source.conf")
+dst_conf_path = os.path.join(confs_directory, "destination.conf")
+
+
+def start_issuesyncd(src_options, dst_options):
+    src_s_c = src_options.get("single_cache")
+    dst_s_c = dst_options.get("single_cache")
+    if src_s_c is None:
+        usage()
+        raise ValueError("single_cache is None in src_options but"
+                         " it should be set to a directory that will"
+                         " contain the issues directory.")
+    if dst_s_c is None:
+        usage()
+        raise ValueError("single_cache is None in dst_options but"
+                         " it should be set to a directory that will"
+                         " contain the issues directory.")
+    if src_s_c == dst_s_c:
+        usage()
+        raise ValueError("single_cache for dst and src are both"
+                         " {} but must be different."
+                         "".format(src_s_c))
+    # src_never_expire = src_options.get('never_expire') is True
+    max_issue = src_options.get('max_issue')
+    if max_issue is None:
+        max_issue = 1000
+        error("WARNING: SRC_MAX_ISSUE set to default: {} (Use the"
+              " --help option to see how to set it.)"
+              "".format(max_issue))
+    else:
+        max_issue = int(max_issue)
+
+    min_issue = src_options.get("min_issue")
+    if min_issue is None:
+        min_issue = 1
+
+    issue_no = min_issue - 1  # This is incremented to 1 before use.
+    # issue_no = max_issue - 1  # debug only
+    src_res_code = 0
+    end_codes = [404, 403]
+    # while src_res_code not in end_codes:
+    while True:
+    # while (issue_no + 1) <= max_issue: # for debug only
+        issue_no += 1
+        if max_issue is not None:
+            if issue_no > max_issue:
+                error("* ending due to setting: --src-max-issue={}"
+                      " (can also be set by SRC_MAX_ISSUE env var)"
+                      "".format({}))
+                break
+        src_repo = Repo(src_options)
+        # src_issue, err = get_issue(src_repo, src_options, issue_no)
+        src_issue, err = src_repo.get_issue(issue_no, src_options)
+        deleted = False
+        if err is not None:
+            '''
+            error("Error accessing source issue {}: {}: {}"
+                  "".format(issue_no, err.get('code'),
+                            err.get('reason')))
+            '''
+            src_res_code = err.get('code')
+            url = err.get('url')
+            if src_res_code in end_codes:
+                if src_res_code == 403:
+                    error("#{}: stopping due to error {} ({})"
+                          "".format(issue_no, err.get('code'),
+                                    err.get('reason')))
+                    # error("  * reason: {}".format())
+                    # error("  * headers: {}".format(err.get('headers')))
+                    break
+                elif src_res_code == 404:
+                    reason_msg = err.get('reason')
+                    if reason_msg is None:
+                        reason_msg = ""
+                    if "deleted" in reason_msg:
+                        error("#{}: Error 404: \"{}\""
+                              "".format(issue_no, reason_msg))
+                        continue
+                    else:
+                        error("#{}: Error 404: \"{}\""
+                              " (The end of the list is assumed.)"
+                              "".format(issue_no, reason_msg))
+                        # error("  * reason: {}".format(err.get('reason')))
+                        # error("  * headers: {}".format(err.get('headers')))
+                        break
+                elif src_res_code == 410:
+                    error("#{}: The issue seems to have been deleted."
+                          "".format(issue_no))
+                    error("  * reason: {}".format(err.get('reason')))
+                    # error("  * headers: {}".format(err.get('headers')))
+                    deleted = False
+                    # TODO: delete on dest (carefully!)
+                    continue
+                else:
+                    error("#{}: stopping due to error code {}"
+                          "".format(issue_no, src_res_code))
+                break
+            else:
+                error("#{}: continuing anyway but got error code {}"
+                      "".format(issue_no, src_res_code))
+
+
+            if src_issue is None:
+                if src_res_code not in end_codes:
+                    error("#{}: Skipping due to unprocessed error {}"
+                          "".format(issue_no, src_res_code))
+                else:
+                    error("#{}: Stopping due to unprocessed error {}"
+                          "".format(issue_no, src_res_code))
+                continue
+            else:
+                error("However, an issue was returned.")
+        elif src_issue is None:
+            raise RuntimeError("The issue was None but the error_dict was None")
+        got_fmt = "#{}: got (source not recorded)"
+        if src_repo.last_src is not None:
+            if src_repo.last_src.startswith("http"):
+                got_fmt = "#{} downloaded"
+            elif os.path.isfile(src_repo.last_src):
+                got_fmt = "#{} loaded from cache file"
+            else:
+                got_fmt = "#{} got " + src_repo.last_src
+        error(got_fmt.format(issue_no))
+        # Example: ~/.cache/pyissuesyncd/source/issues/1.json
+        src_dt_parser = src_repo.options['default_dt_parser']
+        src_created_dt_s = None
+        try:
+            src_created_dt_s = src_repo.getKnown(src_issue, 'created_at')
+        except KeyError:
+            pass
+        src_updated_dt_s = None
+        try:
+            src_updated_dt_s = src_repo.getKnown(src_issue, 'updated_at')
+            try:
+                src_updated_dt = src_dt_parser(src_updated_dt_s)
+            except ValueError as ex:
+                error("Error in {}".format(src_repo.last_src))
+                error(ex)
+                error("If you changed repos and used the same cache dir,"
+                      " manually delete the cache file or directory above.")
+                sys.exit(1)
+            src_updated_ts = int(src_updated_dt.strftime("%s"))
+        except KeyError as ex:
+            error("Missing key: {}".format(ex))
+            error("src_issue: {}"
+                  "".format(json.dumps(src_issue, indent=2)))
+        # ^ See <https://stackoverflow.com/questions/19801727/convert-
+        #   datetime-to-unix-timestamp-and-convert-it-back-in-python>
+        '''
+        print("* src_issue: {} updated: {} = {}"
+              "".format(issue_no, src_updated_ts, src_updated_dt))
+        '''
+        # print(json.dumps(src_issue, indent=2))
+        continue  # for debug only (if stuff below isn't implemented)
+        # enissue.set_verbose(True)
+        dst_repo = Repo(dst_options)
+        dst_issue, err = dst_repo.get_issue(issue_no, dst_options)
+        if err is not None:
+            dst_res_code = err.get('code')
+            url = err.get('url')
+            '''
+            if dst_res_code in end_codes:
+                if dst_res_code == 403:
+                    error("* stopping due to: {}"
+                          "".format(err.get('reason')))
+                    break
+                elif dst_res_code == 404:
+                    error("* 404: There is no issue {} at {} so the end"
+                          " of the issues may have been reached."
+                          "".format(issue_no, url))
+                    error("  * reason: {}".format(err.get('reason')))
+                    # error("  * headers: {}".format(err.get('headers')))
+                    continue
+                elif dst_res_code == 410:
+                    error(err.get('reason'))
+                    error("* Issue {} seems to have been deleted."
+                          "".format(issue_no))
+                    continue
+                break
+            '''
+            if dst_issue is None:
+                # TODO: write the issue
+                continue
+        if dst_issue is None:
+            raise RuntimeError("dst_issue shouldn't be None when error"
+                               " is None.")
+
+        dst_dt_parser = dst_repo.options['default_dt_parser']
+        dst_created_dt_s = dst_repo.getKnown(dst_issue, 'created_at')
+        dst_updated_dt_s = dst_repo.getKnown(dst_issue, 'updated_at')
+        dst_updated_dt = dst_dt_parser(dst_updated_dt_s)
+        dst_updated_ts = int(dst_updated_dt.strftime("%s"))
+        # ^ See <https://stackoverflow.com/questions/19801727/convert-
+        #   datetime-to-unix-timestamp-and-convert-it-back-in-python>
+        '''
+        print("* dst_issue: {} updated: {} = {}"
+              "".format(issue_no, dst_updated_ts, dst_updated_dt))
+        '''
+        # Example: ~/.cache/pyissuesyncd/destination/issues/1.json
+        # break  # for debug only
+
+        continue  # for debug only
+        # print("  * dst_issue:")
+        # print(json.dumps(dst_issue, indent=2))
+        if err is not None:
+            if err.get('code') == 404:
+                # dst_repo.create_issue(src_issue, src_repo)
+                continue
+            error("Error accessing destination issue {}: {}: {}"
+                  "".format(issue_no, err.get('code'),
+                            err.get('reason')))
+            continue
+        # if issue_differs:  # compare timestamp
+        if True:  # for debug only
+            pass
+            # dst_repo.update_issue(src_issue, src_repo)
+
+'''
+manual_args = ['--dst-repo', '--src-repo', '--src-cache',
+               '--dst-cache', '--src-max-issue', '--src-repo-token']
+'''
+
+prev_arg = None
+
+collect_src_keys = {
+    'SRC_REPO': "repo_url",
+    'SRC_CACHE': "single_cache",
+    'SRC_MAX_ISSUE': "max_issue",
+    'SRC_REPO_TOKEN': "token",
+    'SRC_MIN_ISSUE': "min_issue",
+}
+
+collect_dst_keys = {
+    'DST_REPO': "repo_url",
+    'DST_CACHE': "token",
+}
+src_args = {}
+for envVarName, option in collect_src_keys.items():
+    _arg = "--{}".format(envVarName).replace("_", "-").lower()
+    src_args[_arg] = option
+dst_args = {}
+for envVarName, option in collect_dst_keys.items():
+    _arg = "--{}".format(envVarName).replace("_", "-").lower()
+    dst_args[_arg] = option
+
+env_help = {
+    'DST_REPO': "Issues and dependent data will be overwritten at this API URL.",
+    'SRC_CACHE': "Set the directory to store a cached version of the source repo's data.",
+    'DST_CACHE': "Set the directory to store a cached version of the destination repo's data.",
+    'SRC_REPO_TOKEN': "Set the token you generated using the repo's web interface.",
+    'SRC_MIN_ISSUE': "Set what issue number to check first.",
+    'SRC_MAX_ISSUE': "Set what issue number to check last.",
+}
+src_option_defaults = {
+    'repo_url': 'https://github.com/Poikilos/Enliven',
+    'api_id': 'GitHub',
+}
+env_default_help = {
+    'SRC_CACHE': '(default = os.path.join(data_directory, "source"))',
+    'DST_CACHE': 'os.path.join(data_directory, "destination")',
+    'SRC_REPO_TOKEN': 'None',
+    'SRC_MIN_ISSUE': 'None',
+    'SRC_MAX_ISSUE': 'None',
+    'SRC_REPO': src_option_defaults['repo_url'],
+}
+required_env_names = ['DST_REPO']
+
+def usage():
+    print(__doc__)
+    print("Source options:")
+    print("(Can also be set (lowercase names) in {})"
+          "".format(src_conf_path))
+    arg_w = 17
+    env_w = 27
+    line_fmt = "{:"+str(arg_w)+"} {:"+str(env_w)+"}   {}"
+    p = "  "  # option help prefix
+    for _arg, option in src_args.items():
+        help_msg = "Set src_options['{}']".format(option)
+        envVarName = None
+        envVarMsg = None
+        for k, v in collect_src_keys.items():
+            if v == option:
+                envVarName = k
+                envVarMsg = "(or env var {})".format(envVarName)
+                break
+        # arg_msg = _arg
+        # if envVarName in required_env_names:
+        #     arg_msg += " (required)"
+        print(line_fmt.format(_arg, envVarMsg, help_msg))
+        if envVarName is not None:
+            env_help_msg = env_help.get(envVarName)
+            if env_help_msg is not None:
+                print(p+env_help_msg)
+            env_default_help_msg = env_default_help.get(envVarName)
+            if env_default_help_msg is not None:
+                print(p+"(default: {})".format(env_default_help_msg))
+            if envVarName in required_env_names:
+                print(p+"(required)")
+    print("")
+    print("Destination options:")
+    print("(Can also be set (lowercase names) in {})"
+          "".format(dst_conf_path))
+
+    for _arg, option in dst_args.items():
+        help_msg = "Set dst_options['{}']".format(option)
+        envVarName = None
+        envVarMsg = None
+        for k, v in collect_dst_keys.items():
+            if v == option:
+                envVarName = k
+                envVarMsg = "(or env var {})".format(envVarName)
+                break
+        print(line_fmt.format(_arg, envVarMsg, help_msg))
+        if envVarName is not None:
+            env_help_msg = env_help.get(envVarName)
+            if env_help_msg is not None:
+                print(p+env_help_msg)
+            env_default_help_msg = env_default_help.get(envVarName)
+            if env_default_help_msg is not None:
+                print(p+"(default: {})".format(env_default_help_msg))
+            if envVarName in required_env_names:
+                print(p+"(required)")
+
+    print("")
+
+if __name__ == "__main__":
+    src_options = {
+        'repo_url': src_option_defaults['repo_url'],
+        'never_expire': True,
+        'quiet': True,
+        'api_id': src_option_defaults['api_id'],
+    }
+    dst_options = {
+        'never_expire': True,
+        'quiet': True,
+        'api_id': "Gitea",
+    }
+
+    modify_dict_by_conf(dst_options, dst_conf_path, always_lower=True,
+                        no_file_error=False, quiet=False)
+    modify_dict_by_conf(src_options, src_conf_path, always_lower=True,
+                        no_file_error=False, quiet=False)
+
+    for envVarName, option in collect_src_keys.items():
+        _VAL = os.environ.get(envVarName)
+        if _VAL is not None:
+            src_args[option] = _VAL
+            error("* environment set src_options['{}'] to {} via {}"
+                  "".format(option, _VAL, envVarName))
+
+    for envVarName, option in collect_dst_keys.items():
+        _VAL = os.environ.get(envVarName)
+        if _VAL is not None:
+            dst_args[option] = _VAL
+            error("* environment set dst_options['{}'] to {} via {}"
+                  "".format(option, _VAL, envVarName))
+    set_obj_name = None
+    set_key = None
+    for arg in sys.argv[1:]:
+        if set_key is not None:
+            if set_obj_name == "dst":
+                dst_options[set_key] = arg
+                error("* set dst_options['{}'] to {}"
+                      "".format(set_key, arg))
+            elif set_obj_name == "src":
+                src_options[set_key] = arg
+                error("* set src_options['{}'] to {}"
+                      "".format(set_key, arg))
+            else:
+                raise RuntimeError("set_obj_name must be dst or src.")
+            set_key = None
+            set_obj_name = None
+        elif arg in ['-h', '--help']:
+            usage()
+            sys.exit(0)
+        elif arg in src_args.keys():
+            set_key = src_args[arg]
+            set_obj_name = "src"
+            pass
+        elif arg in dst_args.keys():
+            set_key = dst_args[arg]
+            set_obj_name = "dst"
+            pass
+        else:
+            usage()
+            error("Error: The argument is not valid: {}".format(arg))
+            sys.exit(1)
+        prev_arg = arg
+    if set_key is not None:
+        usage()
+        error("Error: You must provide a value after {}"
+              "".format(set_key))
+        sys.exit(1)
+
+    # INFO: start_issuesyncd warns if SRC_MAX_ISSUE is None.
+    if src_options.get('single_cache') is None:
+        src_options['single_cache'] = os.path.join(data_directory, "source")
+
+    if dst_options.get('single_cache') is None:
+        dst_options['single_cache'] = os.path.join(data_directory, "destination")
+
+    error("SRC_REPO (--src-repo) is {}"
+          "".format(src_options.get('repo_url')))
+    error("DST_REPO (--dst-repo) is {}"
+          "".format(dst_options.get('repo_url')))
+    if dst_options.get('repo_url') is None:
+        error("Error: You must set repo_url in {},"
+              " DST_REPO in the environment,"
+              " or specify a url after --dst-repo "
+              "".format(dst_conf_path))
+        sys.exit(1)
+
+    start_issuesyncd(src_options, dst_options)
+
+
