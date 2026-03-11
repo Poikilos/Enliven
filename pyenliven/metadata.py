@@ -40,7 +40,8 @@ gamespec['add_mods']: List[Dict[str, any]] = [
      'items': {'moderator': ['invhack:tool']},
      'comments': ["See also inventory_admin mod which is purely command-based"]},
     {'name': "metatools",      'repo': "https://github.com/Poikilos/metatools.git"},
-    {'name': "modlist",        'repo': "https://github.com/SkyBuilder1717/modlist.git"},
+    # {'name': "modlist",        'repo': "https://github.com/SkyBuilder1717/modlist.git"},
+    # ^ in callback environment_Step() init.lua: 42: attempt to index local 'f' (a nil value)
     {'name': "protect_block_area", 'repo': "https://github.com/C-C-Minetest-Server/protect_block_area.git"},
     # {'name': "protector",      'repo': ["https://notabug.org/TenPlus1/protector.git",
     #                                     "https://codeberg.org/tenplus1/protector.git"]},
