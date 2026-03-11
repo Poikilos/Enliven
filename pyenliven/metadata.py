@@ -196,6 +196,7 @@ gamespec['add_mods']: List[Dict[str, any]] = [
     {'name': "fishing",        'repo': "https://github.com/MinetestForFun/fishing.git",
      'issues': ["Make sure fishing rods recipe works"],
      'version-note': "Minetestforfun's (NOT wulfsdad's) fishing <https://forum.minetest.net/viewtopic.php?f=11&t=13659>"},
+    # TODO: ^ See if Worm Farm mod is necessary or helpful for this.
     {'name': "flowerpot", 'repo': "https://github.com/minetest-mods/flowerpot.git",
      'what': "Works with most plants, and lightweight as in no entity"},
     # ^ Make sure it works with x_farming--Make compat mod if necessary. See api.md.
@@ -328,6 +329,7 @@ gamespec['add_mods']: List[Dict[str, any]] = [
     {'name': "invisible", 'repo': "https://github.com/AiTechEye/invisible.git",
      'items': {'moderator': ['invisible:tool']},  # i is alias for invisible:tool
      'privs': {'moderator': ['invisible']}},
+    {'name': "tnt_revamped", 'repo': "https://gitlab.com/Coder12a/tnt_revamped.git"},
     # NOTE: ^ See also visible_sneak
     {'name': "unified_stamina", 'repo': "https://github.com/t-affeldt/unified_stamina.git",
      'why': "Works with various stamina mods including hbsprint"},
