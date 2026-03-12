@@ -6,6 +6,18 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 
 
 ## [unreleased] - 2026-03-11
+### Added
+- nebula_anticheat
+- Add metatools:stick to moderator item list.
+
+### Changed
+- Switch from armor extended to xtraarmor (Add chain mail, dyed leather armor).
+
+### Fixed
+- Update the marinaramobs repo URL (has fix(s)).
+
+
+## [unreleased] - 2026-03-11
 ### Changed
 - Switch from armor extended to xtraarmor (Chain mail etc. like an older ENLIVEN had).
 
