@@ -5,7 +5,12 @@ The format is based on [Keep a
 Changelog](https://keepachangelog.com/en/1.0.0/).
 
 
-## 2026-03-11
+## [unreleased] - 2026-03-11
+### Changed
+- Switch from armor extended to xtraarmor (Chain mail etc. like an older ENLIVEN had).
+
+
+## [5.15.1.0] - 2026-03-11
 ### Added
 - Add badlands, goblins, dungeon_flora, nextgen_fungi, cactus_damage, tnt_extras.
 
@@ -13,7 +18,7 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 - Switch to caverealms lite.
 
 
-## 2026-03-11
+## [5.15.1.0] - 2026-03-11
 ### Added
 - sounds_redone, connected_chests, hopper, and hopper_compat.
 - orichalcum (commented for now)
@@ -22,7 +27,7 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 - Switch to upstream compassgps.
 
 
-## [git] - 2026-03-07
+## [5.15.1.0] - 2026-03-07
 ### Added
 - bedrock2, fire_plus, frame, playerlist
 - sneak mods: invisible, visible_sneak
@@ -39,7 +44,7 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 - sling
 
 
-## [git] - 2026-03-07
+## [5.15.1.0] - 2026-03-07
 ### Added
 - loot (adds loot API and dungeon treasure)
 - open_ai (adds open_ai mobs API and creatures)
@@ -55,18 +60,18 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 - mobs redo (and mobs_* mods)
 
 
-## [git] - 2026-03-06
+## [5.15.1.0] - 2026-03-06
 ### Added
 - buildenliven.py now has WIP version of most features and metadata (mod list) from install-ENLIVEN-minetest_game.sh
 
 
-## [git] - 2024-01-06
+## [5.15.1.0] - 2024-01-06
 ### Removed
 - Move mock_tnt to its own repo (https://github.com/Poikilos/mock_tnt).
 - Usage of not_minetest_game code for ENLIVEN game.
 
 
-## [git] - 2019-09-20
+## [5.15.1.0] - 2019-09-20
 ### Added
 - generate_Empty_at_each_vertex.py
 
@@ -78,11 +83,11 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 - store Blender-specific py files in utilities/blender
 
 
-## [git] - 2018-10-07
+## [5.15.1.0] - 2018-10-07
 * fixed lapis patching logic
 
 
-## [git] - 2018-10-06
+## [5.15.1.0] - 2018-10-06
 * fixed issue with not detecting pacman for installing minetestmapper
   deps
 * cache repos for install as update (reduce download bandwidth and drive
@@ -91,7 +96,7 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 * use updated travelnet
 
 
-## [git] - 2018-05-10
+## [5.15.1.0] - 2018-05-10
 * moved fully working scripts from etc to root of repo
 * renamed:
 ```bash
@@ -115,7 +120,7 @@ mv unmounter unmounter.sh
   functionally identical to uninstall-minetestserver-git-leftovers.sh)
 
 
-## [git] - 2018-03-13
+## [5.15.1.0] - 2018-03-13
 * added mapfix mod since dynamic_liquid makes one block create a whole
   pond if set high above ground
 * removed mapfix due to [improvements to minetest]
@@ -126,21 +131,21 @@ mv unmounter unmounter.sh
   caves (see <https://forum.minetest.net/viewtopic.php?t=16485>)
 
 
-## [git] - 2018-03-08
+## [5.15.1.0] - 2018-03-08
 * added technic_armor since is now in separate repo
 
 
-## [git] - 2018-03-06
+## [5.15.1.0] - 2018-03-06
 * added mob_horse
 
 
-## [git] - 2018-02-23
+## [5.15.1.0] - 2018-02-23
 * added woodcutting https://github.com/minetest-mods/woodcutting.git
   (sneek click to start auto-harvest tree, sneak again to cancel)
   NOT same as Jeija's timber mod
 
 
-## [git] - 2018-02-21
+## [5.15.1.0] - 2018-02-21
 * (installer now tries to detect 0.5.0 then install "MT_0.5.0-dev"
   branch of 3d armor) fix player halfway into ground when using 0.5.0
   with main branch after installing 3d_armor (must use `MT_0.5.0-dev`
@@ -149,14 +154,14 @@ mv unmounter unmounter.sh
   https://github.com/minetest-mods/worldedge
 
 
-## [git] - 2018-02-19
+## [5.15.1.0] - 2018-02-19
 * added ropes
 * added digilines (I just found out it is used by technic and pipeworks)
 * added armor_monoid (found out it is used by 3d_armor!): an api for
   creating multipliers for damage types
 
 
-## [git] - 2018-02-18
+## [5.15.1.0] - 2018-02-18
 * switched to FaceDeer's fork of caverealms which is integrated with
   mapgen v7's perlin noise and therefore with its biomes
 * subterrane: fork of Caverealms, but is just an API and needs other
@@ -187,7 +192,7 @@ mv unmounter unmounter.sh
   so probably a trm_crops mod should be created
 
 
-## [git] - 2018-02-17
+## [5.15.1.0] - 2018-02-17
 * switched to minetest-mods hbsprint (which optionally uses hudbars,
   hbhunger, and player_monoids)
   https://github.com/minetest-mods/hbsprint.git
@@ -197,18 +202,18 @@ mv unmounter unmounter.sh
     * formerly used GunshipPenguin's sprint
 
 
-## [git] - 2018-02-15
+## [5.15.1.0] - 2018-02-15
 * moved mappers to <https://github.com/poikilos/minetestmapper-python>
 
 
-## [git] - 2018-02-07
+## [5.15.1.0] - 2018-02-07
 * forked trm_minetest_game to use proper dye list (submitted pull
   request to ClockGen since his is the only known git version of Wuzzy's
   which was on the [official treasurer thread]
   (https://forum.minetest.net/viewtopic.php?t=7292))
 
 
-## [git] - 2018-02-08
+## [5.15.1.0] - 2018-02-08
 ### Added
 * trm_pyramids (partial code in game-install-ENLIVEN completed)
   (a required treasure table so tsm_pyramids can provide treasure in
@@ -228,7 +233,7 @@ mv unmounter unmounter.sh
   * plantlife_modpack
 
 
-## [git] - 2018-02-06
+## [5.15.1.0] - 2018-02-06
 ### Changed
 * refactored file structure
   * renamed games/ENLIVEN to patches/subgame
