@@ -39,7 +39,7 @@ logger = logging.getLogger(os.path.split(__file__)[1])
 #   'name':          folder name expected in mods/ or mods_stopgap/
 #   'repo':          git URL (str or list[str] — first = highest priority)
 #   'branch':        optional branch name
-#   'stopgap_only':  True → only use from MODS_STOPGAP_DIR, ignore repo
+#   'stopgap':  True → only use from MODS_STOPGAP_DIR, ignore repo
 
 def main():
     parser = argparse.ArgumentParser(description="Build ENLIVEN subgame from minetest_game")

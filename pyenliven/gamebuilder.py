@@ -67,9 +67,9 @@ class GameBuilder:
 
     def install_mod(self, entry: Dict[str, any], remove_git=True):
         name = entry.get('name')
-        repo = entry.get('repo')
+        url = entry.get('repo')
         branch = entry.get('branch')
-        stopgap_only = entry.get('stopgap_only', False)
+        stopgap = entry.get('stopgap', False)
         settings = entry.get('settings')
         if settings:
             for k, v in settings.items():
@@ -84,53 +84,77 @@ class GameBuilder:
         # 1. Prefer stopgap if exists
         stopgap_src = os.path.join(MODS_STOPGAP_DIR, name)
 
-        if os.path.isdir(stopgap_src):
-            echo0(f"  [stopgap] {name}")
-            if os.path.exists(dest):
-                if os.path.islink(dest):
-                    os.remove(dest)
-                else:
-                    shutil.rmtree(dest)
-            shutil.copytree(stopgap_src, dest)
-            self.meta['mods'][name] = entry
-            return
+        if stopgap:
+            if os.path.isdir(stopgap_src):
+                echo0(f"  [stopgap] {name}")
+                if os.path.exists(dest):
+                    if os.path.islink(dest):
+                        os.remove(dest)
+                    else:
+                        shutil.rmtree(dest)
+                shutil.copytree(stopgap_src, dest)
+                self.meta['mods'][name] = entry
+                return
+            raise FileNotFoundError(
+                f"stopgap={stopgap} but there is no {stopgap_src}")
 
         # 2. Git clone if we have repo URL(s)
-        if not repo:
+        if not url:
             raise ValueError(f"Missing 'repo' for {entry}")
-        urls = [repo] if isinstance(repo, str) else repo
+        urls = [url] if isinstance(url, str) else url
         url = urls[-1]  # prefer last one
         del urls
-        distributor = entry.get('distributor')
-        if not distributor:
-            distributor = url.split("/")[-2]
+        user = entry.get('distributor')
+        if not user:
+            user = url.split("/")[-2]
         repo_name = url.split("/")[-1].replace(".git", "")
 
-        source_path = os.path.expanduser(f"~/{repo_name}")
+        source_path = os.path.expanduser(f"~/git/{repo_name}")
         symlink = False
         if os.path.isdir(source_path):
             # Use the development copy on the computer
             logger.warning(
-                f"Using local git repo without update: {source_path}")
+                "  [local] using local git repo without update:"
+                f" {source_path}")
             symlink = True
         else:
             source_path = os.path.expanduser(
-                f"~/Downloads/git/{distributor}/{repo_name}")
+                f"~/Downloads/git/{user}/{repo_name}")
             if os.path.isdir(source_path):
                 if not self.offline:
+                    repo = Repo(source_path)
                     if self.pull:
-                        echo0(f"  pulling {source_path}")
-                        git_repo = Repo(source_path)
-                        git_repo.remotes.origin.pull()
+                        if branch:
+                            if hasattr(repo, 'switch'):
+                                echo0(f"  [{branch} branch] {source_path}")
+                                repo.git.switch(branch)
+                            else:
+                                echo0(f"  [{branch} branch] Updating remotes for {source_path}")
+                                repo.remotes.origin.fetch()
+                                # remote_ref = f"origin/{branch}"
+                                if branch in repo.heads:
+                                    # Just switch to existing local branch
+                                    repo.heads[branch].checkout()
+                                    echo0(f"    Switched to existing local branch '{branch}'")
+                                else:
+                                    # Create local branch tracking the remote one + switch to it
+                                    remote_head = repo.remotes.origin.refs[branch]   # origin/feature-xyz
+                                    new_local = repo.create_head(branch, remote_head.commit)
+                                    new_local.set_tracking_branch(remote_head) # optional but recommended
+                                    new_local.checkout()
+                                    echo0(f"    Created and checked out local branch '{branch}' ← origin/{branch}")
+
+                        echo0(f"  [git] pulling {source_path}")
+                        repo.remotes.origin.pull()
                     else:
-                        echo0(f"  using existing {source_path}")
+                        echo0(f"  [--no-pull] using existing {source_path}")
             else:
                 if self.offline:
                     raise FileNotFoundError(
                         f"Mod {name} not found in offline mode:"
                         f" {source_path}")
                 else:
-                    echo0(f"  cloning {url} → {source_path}")
+                    echo0(f"  [git] cloning {url} → {source_path}")
                     Repo.clone_from(url, source_path)
         if os.path.exists(dest):
             raise FileExistsError(f"Remove {dest} first.")
@@ -147,10 +171,10 @@ class GameBuilder:
             for sub in exclude:
                 subPath = os.path.join(dest, sub)
                 if os.path.isfile(subPath):
-                    print(f"rm {repr(subPath)}")
+                    print(f"    rm {repr(subPath)}")
                     os.remove(subPath)
                 elif os.path.isdir(subPath):
-                    print(f"rm -r {repr(subPath)}")
+                    print(f"    rm -r {repr(subPath)}")
                     shutil.rmtree(subPath)
                 else:
                     logger.warning(
@@ -163,7 +187,7 @@ class GameBuilder:
         if remove_git:
             destGit = os.path.join(dest, ".git")
             if os.path.isdir(destGit):
-                print(f"rm -rf {repr(destGit)}")
+                print(f"    rm -rf {repr(destGit)}")
                 shutil.rmtree(destGit)
 
     def remove_mod(self, name: str):
