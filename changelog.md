@@ -7,6 +7,11 @@ Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased] - 2026-03-11
 ### Added
+- i3 inventory (and set i3_progressive_mode)
+
+
+## [unreleased] - 2026-03-11
+### Added
 - nebula_anticheat
 - Add metatools:stick to moderator item list.
 

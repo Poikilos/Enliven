@@ -323,6 +323,9 @@ gamespec['add_mods']: List[Dict[str, any]] = [
     {'name': "hunger_ng",      'repo': ["https://gitlab.com/4w/hunger_ng.git",
                                         "https://git.0x7be.net/dirk/hunger_ng"],
      'why': "Many mods including marinara depend on it"},
+    {'name': "i3", 'repo': "https://github.com/mt-historical/i3.git",
+     'settings': OrderedDict(i3_progressive_mode=True)},
+    # NOTE: mtg_craftguide is not necessary for i3--it has its own (& we can specify i3_progressive_mode for unlocking recipes)
     {'name': "lightning",      'repo': "https://github.com/minetest-mods/lightning.git"},
     # {'name': "money",          'repo': ["https://notabug.org/TenPlus1/money",
     #                                     "https://codeberg.org/tenplus1/money.git"],
