@@ -99,17 +99,21 @@ class GameBuilder:
                 f"stopgap={stopgap} but there is no {stopgap_src}")
 
         # 2. Git clone if we have repo URL(s)
-        if not url:
-            raise ValueError(f"Missing 'repo' for {entry}")
-        urls = [url] if isinstance(url, str) else url
-        url = urls[-1]  # prefer last one
-        del urls
-        user = entry.get('distributor')
-        if not user:
-            user = url.split("/")[-2]
-        repo_name = url.split("/")[-1].replace(".git", "")
+        urls = None
+        if url:
+            urls = [url] if isinstance(url, str) else url
+            url = urls[-1]  # prefer last one
+            del urls
+            user = entry.get('distributor')
+            if not user:
+                user = url.split("/")[-2]
+            repo_name = url.split("/")[-1].replace(".git", "")
+        else:
+            repo_name = name
 
         source_path = os.path.expanduser(f"~/git/{repo_name}")
+        if not url and not os.path.isdir(source_path):
+            raise ValueError(f"Missing 'repo' for {entry}")
         symlink = False
         if os.path.isdir(source_path):
             # Use the development copy on the computer
