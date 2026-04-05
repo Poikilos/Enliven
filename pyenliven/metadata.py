@@ -65,9 +65,18 @@ gamespec['add_mods']: List[Dict[str, any]] = [
      'why': "'no false-positives and it catches hackers' according to LuizFcc on ContentDB",
      'content_url': "https://content.luanti.org/packages/JoinNebula/nebula_anticheat/",
      'privs': {'moderator': ['nebula_anticheat_alert']},},
-    {'name': "protect_block_area", 'repo': "https://github.com/C-C-Minetest-Server/protect_block_area.git"},
+    {'name': "protect_block_area", 'repo': "https://github.com/C-C-Minetest-Server/protect_block_area.git", 'content_url': "https://content.luanti.org/packages/Emojiminetest/protect_block_area/",
+     'settings': OrderedDict(area_protector_radius=7, area_protector_delay=2)},  # default 5, 2
     # {'name': "protector",      'repo': ["https://notabug.org/TenPlus1/protector.git",
-    #                                     "https://codeberg.org/tenplus1/protector.git"]},
+    #                                     "https://codeberg.org/tenplus1/protector.git"],
+    # 'settings': OrderedDict(protector_radius=7,
+    #     protector_flip=True,
+    #     protector_pvp=True,
+    #     protector_pvp_spawn=10,
+    #     protector_drop=False,
+    #     protector_hurt=3,
+    # )
+    # },
     {'name': "super_give", 'repo': "https://github.com/daneldragondanel-boop/super_give.git",
      'content_url': "https://content.luanti.org/packages/daneldragondanel-boop/super_give/"},
     {'name': "vote",           'repo': "https://github.com/minetest-mods/vote.git"},
@@ -80,6 +89,12 @@ gamespec['add_mods']: List[Dict[str, any]] = [
      'requires': "creatura"},
     # TODO: ^ Change beef to meat
     # TODO: ^ Make it work with x_farming if doesn't work with minetest_game farming
+    # {"name": "animalworld",
+    #     "repo": [
+    #         "https://github.com/Skandarella/animalworld",
+    #         "https://github.com/mt-mods/animalworld",
+    #     ]
+    # },
     {'name': "creatura", 'repo': "https://github.com/ElCeejo/creatura.git",
      'description': "A performant Animal focused Mob API "},
     # TODO: ^ Make sure spawning crystals are only in creative
@@ -124,7 +139,8 @@ gamespec['add_mods']: List[Dict[str, any]] = [
     {'name': "lapis",          'repo': "https://github.com/Napiophelios/LapisLazuli.git",
      'settings': OrderedDict(enable_lapis_mod_columns=True),
      'why': "Unlike, minetest-mods/lapis, LapisLazuli has more things you can make."},
-    {'name': "livingjungle", 'repo': "https://github.com/Skandarella/livingjungle.git"},
+    {'name': "livingjungle", 'repo': ["https://github.com/Skandarella/livingjungle.git",
+                                      "https://github.com/mt-mods/livingjungle"]},
     {'name': "loot", 'repo': "https://github.com/minetest-mods/loot.git",
      'why': "Defines loot API and adds loot to dungeons",
      'settings': OrderedDict(loot_dungeons=True)},
@@ -149,10 +165,14 @@ gamespec['add_mods']: List[Dict[str, any]] = [
     # {'name': "toolranks", 'repo': "https://codeberg.org/tenplus1/toolranks.git",
     #  'what': "level up tools with use"}
     {'name': "moretrees",      'repo': "https://github.com/mt-mods/moretrees.git"},
+    {'name': "nativevillages", 'repo': ["https://github.com/Skandarella/nativevillages"]},
     {'name': "naturalbiomes", 'repo': "https://github.com/Skandarella/naturalbiomes.git",
-     'recommends': ["winuserleafdecay"]},
+     'recommends': ["winuserleafdecay"],
+     'optional_depends': ["bonemeal", "ethereal", "hunger_ng"]},
     {'name': "nextgen_fungi", 'repo': "https://github.com/starninjas/nextgen_fungi.git",
      'content_url': "https://content.luanti.org/packages/StarNinjas/nextgen_fungi/"},
+    {'name': "people", 'repo': ["https://github.com/Skandarella/people"],
+     'why': "Required by nativevillages"},
     {'name': "plantlife_modpack", 'repo': "https://github.com/mt-mods/plantlife_modpack.git"},
     # TODO: ^ Remove any mods that overlap naturalbiomes
     {'name': "subterrane",     'repo': "https://github.com/minetest-mods/subterrane.git"},
@@ -170,13 +190,17 @@ gamespec['add_mods']: List[Dict[str, any]] = [
     # {'name': "treasurer",      'repo': "http://repo.or.cz/minetest_treasurer.git"},
     # {'name': "trm_pyramids"},  # special – files copied directly in bash → handle manually or stopgap
     # {'name': "tsm_mines",      'repo': "http://repo.or.cz/tsm_mines.git"},  fork of BlockMen’s [Mines](https://forum.minetest.net/viewtopic.php?f=11&t=6307) replaced by tsm_railcorridors
-    # {'name': "tsm_railcorridors", 'repo': ["http://repo.or.cz/RailCorridors/tsm_railcorridors.git",
-    #                                       "https://codeberg.org/Wuzzy/minetest_tsm_railcorridors.git"]},
+    {'name': "tsm_railcorridors", 'repo': ["http://repo.or.cz/RailCorridors/tsm_railcorridors.git",
+                                          "https://codeberg.org/Wuzzy/minetest_tsm_railcorridors.git"],
+     'why': "treasurer support is optional"},
     # TODO: ^ Make loot version of each trm_*, trmp_*, and tsm_*
+    # TODO: ^ Make something spawn on rails underground (if dark)?
     {'name': "magma_conduits", 'repo': "https://github.com/FaceDeer/magma_conduits.git"},
     # {'name': "quartz",         'repo': "https://github.com/minetest-mods/quartz"},  # commented to reduce inventory overload
     {'name': "winuserleafdecay", 'repo': "https://github.com/Skandarella/winuserleafdecay.git"},
-    {'name': "worldedge",      'repo': "https://github.com/minetest-mods/worldedge.git"},
+    {'name': "worldedge",      'repo': "https://github.com/minetest-mods/worldedge.git",
+     'settings': {'worldedge.world_size': 4096}, # world_edge=4096 deprecated/wrong
+     },
 
     # Worldgen - Underwater
     # {'name': "decorations_sea", 'repo': "https://github.com/mt-historical/decorations_sea.git",
@@ -260,6 +284,8 @@ gamespec['add_mods']: List[Dict[str, any]] = [
     {'name': "pipeworks",      'repo': "https://github.com/mt-mods/pipeworks.git"},
     {'name': "ropes",          'repo': "https://github.com/minetest-mods/ropes.git",
      'why-not': "Use ropes from x_farming instead."},
+    {'name': "scaffolding", 'repo': "https://github.com/fluxionary/luanti-scaffolding.git",
+     'content_url': "https://content.luanti.org/packages/rheo/scaffolding/"},
     # {'name': "sling",          'repo': "https://github.com/minetest-mods/sling.git"},
     {'name': "signs_lib",      'repo': "https://github.com/mt-mods/signs_lib.git"},
     {'name': "slimenodes",     'repo': "https://github.com/Poikilos/slimenodes.git"},
@@ -299,6 +325,7 @@ gamespec['add_mods']: List[Dict[str, any]] = [
      'why': "better graphics than farming redo"},
     # TODO: ^ Make sure x_farming works with: minetest_game/farming, hunger_ng
     # TODO: ^ Add white dye from bonemeal recipe if not present
+    # TODO: ^ Make it optionally depend on bonemeal mod (since naturalbiomes can use that as well)
     {'name': "xcompat", 'repo': "https://github.com/mt-mods/xcompat.git"},
     {'name': "xdecor", 'repo': "https://codeberg.org/Wuzzy/xdecor-libre.git"},
     # TODO: ^ Remove shaped nodes.
@@ -308,6 +335,10 @@ gamespec['add_mods']: List[Dict[str, any]] = [
     # ── Player UX ──────────────────────────────────────────────
     {'name': "ambience",       'repo': ["https://notabug.org/tenplus1/ambience.git",
                                         "https://codeberg.org/tenplus1/ambience.git"]},
+    {'name': "craft_table", 'repo': "https://github.com/BrunoMine/craft_table.git",
+     'content_url': "https://content.luanti.org/packages/BrunoMine/craft_table/",},
+    #  'why-not': "2x2 inventory crafting grid override only works for sfinv"},
+    # TODO: See if I can get crafting-2x2 branch of i3 working.
     {'name': "edit_skin", 'repo': "https://github.com/MrRar/edit_skin.git",
      'content_url': "https://content.luanti.org/packages/Mr.%20Rar/edit_skin/"},
     {'name': "effervescence", 'repo': "https://github.com/EmptyStar/effervescence.git"},
@@ -324,12 +355,24 @@ gamespec['add_mods']: List[Dict[str, any]] = [
                                         "https://git.0x7be.net/dirk/hunger_ng"],
      'why': "Many mods including marinara depend on it"},
     {'name': "i3", 'repo': "https://github.com/mt-historical/i3.git",
-     'settings': OrderedDict(i3_progressive_mode=True)},
+     'settings': OrderedDict(i3_progressive_mode=True, i3_crafting_grid_width=2)},
     # NOTE: mtg_craftguide is not necessary for i3--it has its own (& we can specify i3_progressive_mode for unlocking recipes)
     {'name': "lightning",      'repo': "https://github.com/minetest-mods/lightning.git"},
     # {'name': "money",          'repo': ["https://notabug.org/TenPlus1/money",
     #                                     "https://codeberg.org/tenplus1/money.git"],
     #  'why-not': "This fork removes everything except barter stations"},
+    {"name": "livingcaves",
+        "repo": [
+        "https://github.com/Skandarella/livingcaves"
+        ]
+    },
+    {"name": "livingcavesmobs",
+        "repo": [
+        "https://github.com/Skandarella/livingcavesmobs",
+        "https://github.com/mt-mods/livingcavesmobs",
+        ]
+    },
+    {"name": "livingdesert", "repo": ["https://github.com/Skandarella/livingdesert"]},
     {'name': "music_modpack", 'repo': "https://github.com/mt-historical/music_modpack.git",
      'exclude': ["music_default", "music_dfcaverns"],
      'what': "music_api such as for Poikilos' environment_music"},
@@ -450,22 +493,11 @@ server_only_mods = [
 # ──────────────────────────────────────────────────────────────
 
 BASE_ENLIVEN_CONF_SETTINGS = OrderedDict(
-    # General / map
-    map_generation_limit=5000,
-    # HUD / Controls
-    # "stamina_disable_aux1 = true",  # require double tap for run (Prevent stamina from taking up aux1 key)
-    # "stamina_hud_x =",
-    # "stamina_hud_y =",
-    # "stamina_double_tap_time =",   # 0 to disable
-    # Protector
-    protector_radius=7,
-    protector_flip=True,
-    protector_pvp=True,
-    protector_pvp_spawn=10,
-    protector_drop=False,
-    protector_hurt=3,
-    # Other gameplay
-    world_edge=5000,
+    # minetest_game
+    ## General / map
+    map_generation_limit=5000,  # just a little larger than worldedge mod (avoid falling off)
+    ## Other gameplay
+    give_initial_stuff = False,
     default_privs="interact,shout,home",
     max_users=50,
     motd="Actions and chat messages are logged. Use inventory to see recipes (use web for live map if available).",
@@ -476,6 +508,12 @@ BASE_ENLIVEN_CONF_SETTINGS = OrderedDict(
     sprint_speed=2.25,
     sprint_jump=1.25,
     sprint_stamina_drain=.5,
+
+    # HUD / Controls
+    # "stamina_disable_aux1 = true",  # require double tap for run (Prevent stamina from taking up aux1 key)
+    # "stamina_hud_x =",
+    # "stamina_hud_y =",
+    # "stamina_double_tap_time =",   # 0 to disable
 )
 BASE_ENLIVEN_CONF_SETTINGS['secure.trusted_mods'] = "advanced_npc"
 BASE_ENLIVEN_CONF_SETTINGS['secure.http_mods'] = "modlist"

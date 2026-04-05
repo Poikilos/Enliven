@@ -5,6 +5,26 @@ The format is based on [Keep a
 Changelog](https://keepachangelog.com/en/1.0.0/).
 
 
+## [unreleased] - 2026-04-05
+### Added
+- craft_table, livingcaves, livingcavesmobs, livingdesert, nativevillages, people, scaffolding, tsm_railcorridors
+- `world_size` setting
+- Comments for animalworld, protector
+- `protect_block_area` settings in gamespec
+- `i3_crafting_grid_width` setting (for my WIP i3 fork)
+
+### Changed
+- mt-mods url for livingjungle
+- Move unused protector settings to commented protector entry in gamespec
+
+
+## [unreleased] - 2026-04-05
+### Added
+- set_gamespec method (and move documentation comments to its docstring)
+### Fixed
+- Don't remove .git folder from dest if dest is symlink!
+
+
 ## [unreleased] - 2026-03-11
 ### Added
 - i3 inventory (and set i3_progressive_mode)
