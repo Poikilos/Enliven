@@ -2,6 +2,8 @@
 '''
 ENLIVEN subgame builder - creates ENLIVEN based on minetest_game
 Merges mods & settings from old bash installer script
+(See metadata.py, where there is a list of dictionaries
+arranged so they can be processed by the GameBuilder class).
 
 mt_conf_by_mod settings should be placed in minetest.conf
 but go in f"{destination}/minetest.conf" by default. See also:
@@ -31,15 +33,6 @@ from pyenliven.gamebuilder import GameBuilder
 
 logger = logging.getLogger(os.path.split(__file__)[1])
 
-# ──────────────────────────────────────────────────────────────
-#           M O D   L I S T   F R O M   B A S H   S C R I P T
-# ──────────────────────────────────────────────────────────────
-
-# Format:
-#   'name':          folder name expected in mods/ or mods_stopgap/
-#   'repo':          git URL (str or list[str] — first = highest priority)
-#   'branch':        optional branch name
-#   'stopgap':  True → only use from MODS_STOPGAP_DIR, ignore repo
 
 def main():
     parser = argparse.ArgumentParser(description="Build ENLIVEN subgame from minetest_game")

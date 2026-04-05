@@ -21,6 +21,7 @@ logger = getLogger(__name__)
 
 class GameBuilder:
     """Manage creation of a game from scratch.
+    See set_gamespec for mod list, minetest.conf settings, etc.
 
     Attributes:
         more_conf (OrderedDict): minetest.conf settings collected from
@@ -43,7 +44,7 @@ class GameBuilder:
         self.more_conf = OrderedDict()
         self.meta = OrderedDict()
         self.meta['mods'] = OrderedDict()
-
+        self.set_gamespec(gamespec)
         if minetest_version not in ("5", "0.4"):
             raise ValueError("minetest_version must be '5' or '0.4'")
 
@@ -57,12 +58,31 @@ class GameBuilder:
         echo0(f"  target Minetest compatibility: {self.minetest_version}")
         echo0(f"  offline mode: {self.offline}")
 
+    def set_gamespec(self, _gamespec: Dict):
+        """Set all metadata required to build the game.
+        The GameBuilder constructor sets self._gamespec to Enliven's
+        gamespec from metadata.py, but you can call this method again
+        before calling build method(s) to build a different game.
+
+        Args:
+            _gamespec (dict): Format:
+                - 'name' (str): folder name expected in mods/ or
+                  mods_stopgap/
+                - 'repo' (Union[str,list[str]]): git URL (str, or
+                  list[str] with highest priority last)
+                - 'branch' (str): optional branch name
+                - 'stopgap' (bool):  True → only use from
+                  MODS_STOPGAP_DIR, ignore repo
+        """
+        self._gamespec = gamespec
+
     def prepare_target(self):
         """Copy minetest_game → ENLIVEN if needed"""
         if os.path.exists(self.target_game):
             raise FileExistsError(f"Target already exists: {self.target_game}")
             # return
         echo0("Copying minetest_game → ENLIVEN ...")
+        print(f"cp -R {repr(self.source_game)} {repr(self.target_game)}")
         shutil.copytree(self.source_game, self.target_game)
 
     def install_mod(self, entry: Dict[str, any], remove_git=True):
@@ -89,9 +109,12 @@ class GameBuilder:
                 echo0(f"  [stopgap] {name}")
                 if os.path.exists(dest):
                     if os.path.islink(dest):
+                        print(f"rm {repr(dest)}  # remove link before installing stopgap")
                         os.remove(dest)
                     else:
+                        print(f"rm -rf {repr(dest)}  # remove folder before installing stopgap")
                         shutil.rmtree(dest)
+                print(f"cp -R {repr(stopgap_src)} {repr(dest)}  # stopgap_src to dest")
                 shutil.copytree(stopgap_src, dest)
                 self.meta['mods'][name] = entry
                 return
@@ -167,14 +190,17 @@ class GameBuilder:
             if platform.system() == "Windows":
                 symlink = False  # since making symlink requires elevation
         if symlink:
-            os.symlink(source_path, dest, target_is_directory=True)
+            target_is_directory = True
+            print(f"ln -s {repr(source_path)} {repr(dest)}  # source_path to dest target_is_directory={target_is_directory}")
+            os.symlink(source_path, dest, target_is_directory=target_is_directory)
         else:
+            print(f"cp -R {repr(source_path)} {repr(dest)}  # source_path to dest")
             shutil.copytree(source_path, dest)
         exclude = entry.get('exclude')
         if exclude:
             for sub in exclude:
                 subPath = os.path.join(dest, sub)
-                if os.path.isfile(subPath):
+                if os.path.islink(subPath) or os.path.isfile(subPath):
                     print(f"    rm {repr(subPath)}")
                     os.remove(subPath)
                 elif os.path.isdir(subPath):
@@ -188,11 +214,12 @@ class GameBuilder:
         # if os.path.isdir(dest_git):
         #     shutil.rmtree(dest_git)
         self.meta['mods'][name] = entry
-        if remove_git:
-            destGit = os.path.join(dest, ".git")
-            if os.path.isdir(destGit):
-                print(f"    rm -rf {repr(destGit)}")
-                shutil.rmtree(destGit)
+        if not symlink:
+            if remove_git:
+                destGit = os.path.join(dest, ".git")
+                if os.path.isdir(destGit):
+                    print(f"    rm -rf {repr(destGit)}")
+                    shutil.rmtree(destGit)
 
     def remove_mod(self, name: str):
         path = os.path.join(self.mods_target, name)
@@ -201,11 +228,11 @@ class GameBuilder:
             shutil.rmtree(path)
 
     def apply_remove_list(self):
-        for m in gamespec.get('remove_mods', []):
+        for m in self._gamespec.get('remove_mods', []):
             self.remove_mod(m)
 
     def install_all_mods(self):
-        for entry in gamespec.get('add_mods', []):
+        for entry in self._gamespec.get('add_mods', []):
             self.install_mod(entry)
 
     def write_game_conf(self):
