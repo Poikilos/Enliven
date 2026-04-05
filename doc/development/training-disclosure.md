@@ -11,3 +11,19 @@ Ok here is my improved version. Add all of the minetest.conf settings from the b
 default the version to "5" (Minetest 5 was formerly called "0.5") and add the switching features between "0.4" and that from the bash script. Add a --minetest-version argument to set it, but only allow "0.4" or "5".
 
 Add real git cloning. If the mod already exists in os.expanduser(f"~/Downloads/{author}/{repo_name}") try pull, otherwise allow the git module's exception to stop the program (don't use any try blocks in the entire program except the one in main) unless the "--offline" argparse argument is set. If the folder doesn't exist and offline is set, raise FileNotFoundError, but if offline is not set, clone the repo. Make install_mod check if the "distributor" key is set in the entry. If not set, 'distributor' is not set, set distributor to "Poikilos" and if 'repo' is set, set author to entry['repo'].split("/")[-2]. Regardless of the author, if os.expanduser(f"~/git/{repo_name}"), use the mod as is (no pull whether offline or not) and show a warning with logger (where logger = getLogger(os.path.split(__file__, 1)). For each repo in gamespec['add_mods'] where the domain is repo.or.cz, set maintainer to "Wuzzy"
+
+## utilities/find-mirror
+- https://grok.com/share/c2hhcmQtMg_97b2b713-2623-4109-8001-f4f87970c75a
+Write a find-fork Python script that accepts a github username via argparse, and uses the github api to list all repositories for the user such as https://github.com/{user}. For each repository name, see if the repository exists under github.com/mt-mods, github.com/minetest-mods, or github.com/mt-historical in that order. Keep the first one found. Output all repos in json format. Use OrderedDict while doing the collecting. Use indent=2 for json output. write the json to stdout. Write everything else via the logging module. If there are any non-error messages that are not the single json print, write them using logging.info. Set the log level to INFO. Collect all repos, inserting the detected mirror copy in the first index. For example, if a repo named fsg for the given user doesn't exist on any of the three hard-coded forker usernames, but the repo animalworld exists in mt-mods, then stdout should be like:
+[
+  {
+    "name": "fsg",
+    "repo": ["https://github.com/Skandarella/fsg"]
+  },
+  {
+    "name": "animalworld",
+    "repo": ["https://github.com/mt-mods/animalworld", "https://github.com/Skandarella/animalworld"]
+  }
+]
+
+call main like sys.exit(main()) and return 0 if good, otherwise nonzero (or raise exception--Don't catch except ones used for logic such as requests.RequestException). Make a MirrorFinder class to hold active code and the given github user. Follow PEP8 such as 79-long lines max, 72 for comments. Add shebang and magic utf-8 comment.

@@ -1,0 +1,128 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import argparse
+import json
+import logging
+import requests
+import sys
+from collections import OrderedDict
+
+
+class MirrorFinder:
+    """Finds mirror repositories under mt-mods, minetest-mods, or mt-historical."""
+
+    FORKERS = ["mt-mods", "minetest-mods", "mt-historical"]
+
+    def __init__(self, username: str):
+        self.username = username.strip()
+        self.results = OrderedDict()
+
+    def fetch_repositories(self) -> list:
+        """Fetch all public repositories for the user with pagination."""
+        repos = []
+        page = 1
+        per_page = 100
+
+        while True:
+            url = (
+                f"https://api.github.com/users/{self.username}/repos"
+                f"?per_page={per_page}&page={page}"
+            )
+            try:
+                resp = requests.get(url, timeout=10)
+                if resp.status_code != 200:
+                    logging.error(
+                        f"Failed to fetch repositories (HTTP {resp.status_code}): "
+                        f"{resp.text[:200]}"
+                    )
+                    sys.exit(1)
+                page_repos = resp.json()
+                if not page_repos:
+                    break
+                repos.extend(page_repos)
+                page += 1
+            except requests.RequestException as e:
+                logging.error(f"Network error while fetching repositories: {e}")
+                sys.exit(1)
+
+        logging.info(f"Found {len(repos)} repositories for {self.username}")
+        return repos
+
+    def find_mirror(self, repo_name: str) -> str | None:
+        """Check for mirror in priority order. Return first found URL or None."""
+        original_url = f"https://github.com/{self.username}/{repo_name}"
+
+        for forker in self.FORKERS:
+            check_url = f"https://api.github.com/repos/{forker}/{repo_name}"
+            try:
+                resp = requests.get(check_url, timeout=10)
+                if resp.status_code == 200:
+                    mirror_url = f"https://github.com/{forker}/{repo_name}"
+                    logging.info(f"Found mirror for '{repo_name}' under {forker}")
+                    return mirror_url
+                elif resp.status_code == 404:
+                    continue
+                else:
+                    logging.warning(
+                        f"Unexpected status {resp.status_code} checking "
+                        f"{forker}/{repo_name}"
+                    )
+            except requests.RequestException as e:
+                logging.warning(f"Network error checking {forker}/{repo_name}: {e}")
+
+        return None
+
+    def process_repositories(self, repos: list) -> None:
+        """Process each repo and build results with mirror first if found."""
+        for repo_data in repos:
+            name = repo_data.get("name")
+            if not name:
+                continue
+
+            mirror_url = self.find_mirror(name)
+            original_url = f"https://github.com/{self.username}/{name}"
+
+            if mirror_url:
+                repo_list = [original_url, mirror_url]
+            else:
+                repo_list = [original_url]
+
+            self.results[name] = {
+                "name": name,
+                "repo": repo_list
+            }
+
+    def run(self) -> int:
+        """Main execution logic. Returns 0 on success."""
+        logging.info(f"Fetching repositories for user: {self.username}")
+
+        repos = self.fetch_repositories()
+
+        self.process_repositories(repos)
+
+        # Output JSON to stdout
+        output_list = list(self.results.values())
+        print(json.dumps(output_list, indent=2))
+
+        return 0
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description=(
+            "Find forks/mirrors of a GitHub user's repositories under "
+            "mt-mods, minetest-mods, or mt-historical."
+        )
+    )
+    parser.add_argument("username", help="GitHub username")
+    args = parser.parse_args()
+
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+
+    finder = MirrorFinder(args.username)
+    return finder.run()
+
+
+if __name__ == "__main__":
+    sys.exit(main())
